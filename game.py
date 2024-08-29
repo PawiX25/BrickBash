@@ -25,6 +25,9 @@ BRICK_HEIGHT = 20
 BRICK_ROWS = 5
 BRICK_COLUMNS = 10
 
+score = 0
+font = pygame.font.SysFont(None, 36)
+
 class Paddle(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -103,9 +106,16 @@ while running:
     brick_collision_list = pygame.sprite.spritecollide(ball, bricks, True)
     if brick_collision_list:
         ball.speed_y = -ball.speed_y
+        # Increment score
+        score += len(brick_collision_list)
 
     screen.fill(BLACK)
     all_sprites.draw(screen)
+    
+    # Render the score
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
+
     pygame.display.flip()
     pygame.time.Clock().tick(60)
 
