@@ -39,6 +39,7 @@ score = 0
 lives = 3
 font = pygame.font.SysFont(None, 36)
 game_over = False
+paused = False  # Variable to track if the game is paused
 last_speed_increase_time = pygame.time.get_ticks()
 
 def display_message(text, color, position):
@@ -160,8 +161,10 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r and game_over:
                 restart_game()
+            elif event.key == pygame.K_p:  # Toggle pause with 'P'
+                paused = not paused
 
-    if not game_over:
+    if not game_over and not paused:  # Game logic runs only when not paused
         all_sprites.update()
 
         if not ball.update():
@@ -200,6 +203,9 @@ while running:
 
     lives_text = font.render(f"Lives: {lives}", True, WHITE)
     screen.blit(lives_text, (10, 50))
+
+    if paused:
+        display_message("Paused", WHITE, (SCREEN_WIDTH // 2 - 60, SCREEN_HEIGHT // 2 - 20))  # Show pause message
 
     if game_over and len(bricks) > 0:
         display_message("Game Over", RED, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 20))
