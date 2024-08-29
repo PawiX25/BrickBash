@@ -19,10 +19,8 @@ ORANGE = (255, 165, 0)
 
 PADDLE_WIDTH = 100
 PADDLE_HEIGHT = 10
-PADDLE_SPEED = 10
 
 BALL_SIZE = 10
-BALL_SPEED = 5
 BALL_SPEED_INCREMENT = 0.1
 SCORE_MILESTONE = 10
 
@@ -42,6 +40,25 @@ game_over = False
 paused = False  # Variable to track if the game is paused
 last_speed_increase_time = pygame.time.get_ticks()
 current_level = 1  # Start at level 1
+
+difficulty = "medium"
+
+# Modify game parameters based on difficulty
+if difficulty == "easy":
+    PADDLE_SPEED = 15
+    BALL_SPEED = 4
+    BRICK_ROWS = 4
+    BRICK_COLUMNS = 8
+elif difficulty == "medium":
+    PADDLE_SPEED = 10
+    BALL_SPEED = 5
+    BRICK_ROWS = 5
+    BRICK_COLUMNS = 10
+elif difficulty == "hard":
+    PADDLE_SPEED = 7
+    BALL_SPEED = 6
+    BRICK_ROWS = 6
+    BRICK_COLUMNS = 12
 
 def display_message(text, color, position):
     message = font.render(text, True, color)
