@@ -20,6 +20,8 @@ PADDLE_SPEED = 10
 
 BALL_SIZE = 10
 BALL_SPEED = 5
+BALL_SPEED_INCREMENT = 0.1
+SCORE_MILESTONE = 10
 
 BRICK_WIDTH = 75
 BRICK_HEIGHT = 20
@@ -30,6 +32,7 @@ score = 0
 lives = 3
 font = pygame.font.SysFont(None, 36)
 game_over = False
+last_speed_increase_time = pygame.time.get_ticks()
 
 def display_message(text, color, position):
     message = font.render(text, True, color)
@@ -55,10 +58,7 @@ def handle_ball_fall():
     global lives
     lives -= 1
     if lives > 0:
-        ball.rect.x = SCREEN_WIDTH // 2
-        ball.rect.y = SCREEN_HEIGHT // 2
-        ball.speed_x = BALL_SPEED * random.choice([-1, 1])
-        ball.speed_y = -BALL_SPEED
+        ball.reset()
         paddle.rect.x = (SCREEN_WIDTH - PADDLE_WIDTH) // 2
         paddle.rect.y = SCREEN_HEIGHT - PADDLE_HEIGHT - 10
     else:
@@ -91,6 +91,9 @@ class Ball(pygame.sprite.Sprite):
         self.image = pygame.Surface([BALL_SIZE, BALL_SIZE])
         self.image.fill(WHITE)
         self.rect = self.image.get_rect()
+        self.reset()
+
+    def reset(self):
         self.rect.x = SCREEN_WIDTH // 2
         self.rect.y = SCREEN_HEIGHT // 2
         self.speed_x = BALL_SPEED * random.choice([-1, 1])
@@ -160,6 +163,18 @@ while running:
         if brick_collision_list:
             ball.speed_y = -ball.speed_y
             score += len(brick_collision_list)
+
+        # Increase ball speed based on score milestones
+        if score // SCORE_MILESTONE > (score - len(brick_collision_list)) // SCORE_MILESTONE:
+            ball.speed_x += BALL_SPEED_INCREMENT * (1 if ball.speed_x > 0 else -1)
+            ball.speed_y += BALL_SPEED_INCREMENT
+
+        # Increase ball speed incrementally over time
+        current_time = pygame.time.get_ticks()
+        if current_time - last_speed_increase_time > 30000:  # Increase every 30 seconds
+            ball.speed_x += BALL_SPEED_INCREMENT * (1 if ball.speed_x > 0 else -1)
+            ball.speed_y += BALL_SPEED_INCREMENT
+            last_speed_increase_time = current_time
 
     screen.fill(BLACK)
     all_sprites.draw(screen)
