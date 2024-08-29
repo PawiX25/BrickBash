@@ -12,6 +12,7 @@ pygame.display.set_caption("Breakout Clone")
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
 
 PADDLE_WIDTH = 100
 PADDLE_HEIGHT = 10
@@ -27,6 +28,7 @@ BRICK_COLUMNS = 10
 
 score = 0
 font = pygame.font.SysFont(None, 36)
+game_over = False
 
 class Paddle(pygame.sprite.Sprite):
     def __init__(self):
@@ -67,9 +69,8 @@ class Ball(pygame.sprite.Sprite):
         if self.rect.y <= 0:
             self.speed_y = -self.speed_y
         if self.rect.y > SCREEN_HEIGHT:
-            self.rect.x = SCREEN_WIDTH // 2
-            self.rect.y = SCREEN_HEIGHT // 2
-            self.speed_y = -BALL_SPEED
+            return False  # Indicates ball has fallen off screen
+        return True  # Indicates ball is still in play
 
 class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -79,6 +80,10 @@ class Brick(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+def display_message(text, color, position):
+    message = font.render(text, True, color)
+    screen.blit(message, position)
 
 all_sprites = pygame.sprite.Group()
 bricks = pygame.sprite.Group()
@@ -101,20 +106,26 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    all_sprites.update()
+    if not game_over:
+        all_sprites.update()
+        
+        if not ball.update():  # Check if ball is out of play
+            game_over = True  # End the game if ball falls off screen
 
-    brick_collision_list = pygame.sprite.spritecollide(ball, bricks, True)
-    if brick_collision_list:
-        ball.speed_y = -ball.speed_y
-        # Increment score
-        score += len(brick_collision_list)
+        brick_collision_list = pygame.sprite.spritecollide(ball, bricks, True)
+        if brick_collision_list:
+            ball.speed_y = -ball.speed_y
+            score += len(brick_collision_list)
 
     screen.fill(BLACK)
     all_sprites.draw(screen)
     
-    # Render the score
     score_text = font.render(f"Score: {score}", True, WHITE)
     screen.blit(score_text, (10, 10))
+    
+    if game_over:
+        display_message("Game Over", RED, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 20))
+        display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
 
     pygame.display.flip()
     pygame.time.Clock().tick(60)
