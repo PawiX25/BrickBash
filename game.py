@@ -5,11 +5,24 @@ import os
 
 pygame.init()
 
+# Constants
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Breakout Clone")
+BALL_SIZE = 10
+BALL_SPEED = 5
+BALL_SPEED_INCREMENT = 0.1
+PADDLE_WIDTH = 100
+PADDLE_HEIGHT = 10
+PADDLE_SPEED = 10
+SCORE_MILESTONE = 10
+BRICK_WIDTH = 75
+BRICK_HEIGHT = 20
+BRICK_ROWS = 5
+BRICK_COLUMNS = 10
+HIGH_SCORES_FILE = "high_scores.txt"
+MAX_HIGH_SCORES = 5
 
+# Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -17,35 +30,20 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 165, 0)
-
-PADDLE_WIDTH = 100
-PADDLE_HEIGHT = 10
-
-BALL_SIZE = 10
-BALL_SPEED_INCREMENT = 0.1
-SCORE_MILESTONE = 10
-
-BRICK_WIDTH = 75
-BRICK_HEIGHT = 20
-BRICK_ROWS = 5
-BRICK_COLUMNS = 10
-
-# Colors for bricks
 BRICK_COLORS = [RED, GREEN, BLUE, YELLOW, ORANGE]
 
-# High score management
-HIGH_SCORES_FILE = "high_scores.txt"
-MAX_HIGH_SCORES = 5  # Number of high scores to track
-last_scores = []  # List to track the last 5 scores
+# Initialize screen and font
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Breakout Clone")
+font = pygame.font.SysFont(None, 36)
 
 # Game variables
 score = 0
 lives = 3
-font = pygame.font.SysFont(None, 36)
 game_over = False
-paused = False  # Variable to track if the game is paused
+paused = False
 last_speed_increase_time = pygame.time.get_ticks()
-current_level = 1  # Start at level 1
+current_level = 1
 
 # Menu variables
 menu_active = True
@@ -69,14 +67,11 @@ def generate_level(level):
     for row in range(BRICK_ROWS):
         for col in range(BRICK_COLUMNS):
             if level == 1:
-                # Simple pattern for level 1
                 create_brick(row, col)
             elif level == 2:
-                # Different pattern for level 2
                 if row % 2 == 0:
                     create_brick(row, col)
             elif level == 3:
-                # More challenging pattern for level 3
                 if (row + col) % 2 == 0:
                     create_brick(row, col)
 
@@ -227,7 +222,7 @@ all_sprites.add(paddle)
 all_sprites.add(ball)
 
 # Load initial high scores
-load_high_scores()
+last_scores = load_high_scores()
 
 # Main game loop
 running = True
