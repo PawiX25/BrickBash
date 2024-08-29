@@ -27,6 +27,7 @@ BRICK_ROWS = 5
 BRICK_COLUMNS = 10
 
 score = 0
+lives = 3
 font = pygame.font.SysFont(None, 36)
 game_over = False
 
@@ -35,9 +36,10 @@ def display_message(text, color, position):
     screen.blit(message, position)
 
 def restart_game():
-    global game_over, score, ball, paddle, bricks
+    global game_over, score, lives, ball, paddle, bricks
     game_over = False
     score = 0
+    lives = 3
     ball = Ball()
     paddle = Paddle()
     all_sprites.add(paddle)
@@ -48,6 +50,20 @@ def restart_game():
             brick = Brick(col * (BRICK_WIDTH + 5) + 35, row * (BRICK_HEIGHT + 5) + 50)
             all_sprites.add(brick)
             bricks.add(brick)
+
+def handle_ball_fall():
+    global lives
+    lives -= 1
+    if lives > 0:
+        ball.rect.x = SCREEN_WIDTH // 2
+        ball.rect.y = SCREEN_HEIGHT // 2
+        ball.speed_x = BALL_SPEED * random.choice([-1, 1])
+        ball.speed_y = -BALL_SPEED
+        paddle.rect.x = (SCREEN_WIDTH - PADDLE_WIDTH) // 2
+        paddle.rect.y = SCREEN_HEIGHT - PADDLE_HEIGHT - 10
+    else:
+        return True
+    return False
 
 class Paddle(pygame.sprite.Sprite):
     def __init__(self):
@@ -84,17 +100,17 @@ class Ball(pygame.sprite.Sprite):
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
 
-        # Ball collision with walls
         if self.rect.x <= 0 or self.rect.x >= SCREEN_WIDTH - BALL_SIZE:
             self.speed_x = -self.speed_x
         if self.rect.y <= 0:
             self.speed_y = -self.speed_y
 
-        # Ball collision with paddle
         if pygame.sprite.collide_rect(self, paddle):
             self.speed_y = -self.speed_y
+            delta_x = (self.rect.centerx - paddle.rect.centerx) / (PADDLE_WIDTH / 2)
+            self.speed_x += delta_x * 2
+            self.speed_x = min(max(self.speed_x, -BALL_SPEED * 1.5), BALL_SPEED * 1.5)
 
-        # Ball falls off screen
         if self.rect.y > SCREEN_HEIGHT:
             return False
         return True
@@ -136,8 +152,9 @@ while running:
     if not game_over:
         all_sprites.update()
 
-        if not ball.update():  # Check if ball is out of play
-            game_over = True  # End the game if ball falls off screen
+        if not ball.update():
+            if handle_ball_fall():
+                game_over = True
 
         brick_collision_list = pygame.sprite.spritecollide(ball, bricks, True)
         if brick_collision_list:
@@ -149,6 +166,9 @@ while running:
 
     score_text = font.render(f"Score: {score}", True, WHITE)
     screen.blit(score_text, (10, 10))
+
+    lives_text = font.render(f"Lives: {lives}", True, WHITE)
+    screen.blit(lives_text, (10, 50))
 
     if game_over:
         display_message("Game Over", RED, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 20))
