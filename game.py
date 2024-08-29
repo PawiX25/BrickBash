@@ -41,13 +41,39 @@ font = pygame.font.SysFont(None, 36)
 game_over = False
 paused = False  # Variable to track if the game is paused
 last_speed_increase_time = pygame.time.get_ticks()
+current_level = 1  # Start at level 1
 
 def display_message(text, color, position):
     message = font.render(text, True, color)
     screen.blit(message, position)
 
-def restart_game():
-    global game_over, score, lives, ball, paddle, bricks
+def create_brick(row, col):
+    color = BRICK_COLORS[row % len(BRICK_COLORS)]
+    brick = Brick(col * (BRICK_WIDTH + 5) + 35, row * (BRICK_HEIGHT + 5) + 50, color)
+    all_sprites.add(brick)
+    bricks.add(brick)
+
+def generate_level(level):
+    bricks.empty()  # Clear existing bricks
+    all_sprites.remove(*bricks)
+    
+    for row in range(BRICK_ROWS):
+        for col in range(BRICK_COLUMNS):
+            if level == 1:
+                # Simple pattern for level 1
+                create_brick(row, col)
+            elif level == 2:
+                # Different pattern for level 2
+                if row % 2 == 0:
+                    create_brick(row, col)
+            elif level == 3:
+                # More challenging pattern for level 3
+                if (row + col) % 2 == 0:
+                    create_brick(row, col)
+            # Add more levels with different patterns if needed
+
+def restart_game(start_level=1):
+    global game_over, score, lives, ball, paddle, current_level
     game_over = False
     score = 0
     lives = 3
@@ -55,13 +81,8 @@ def restart_game():
     paddle = Paddle()
     all_sprites.add(paddle)
     all_sprites.add(ball)
-    bricks.empty()
-    for row in range(BRICK_ROWS):
-        for col in range(BRICK_COLUMNS):
-            color = BRICK_COLORS[row % len(BRICK_COLORS)]
-            brick = Brick(col * (BRICK_WIDTH + 5) + 35, row * (BRICK_HEIGHT + 5) + 50, color)
-            all_sprites.add(brick)
-            bricks.add(brick)
+    current_level = start_level
+    generate_level(current_level)
 
 def handle_ball_fall():
     global lives
@@ -145,12 +166,7 @@ paddle = Paddle()
 ball = Ball()
 all_sprites.add(paddle)
 all_sprites.add(ball)
-for row in range(BRICK_ROWS):
-    for col in range(BRICK_COLUMNS):
-        color = BRICK_COLORS[row % len(BRICK_COLORS)]
-        brick = Brick(col * (BRICK_WIDTH + 5) + 35, row * (BRICK_HEIGHT + 5) + 50, color)
-        all_sprites.add(brick)
-        bricks.add(brick)
+generate_level(current_level)
 
 # Main game loop
 running = True
@@ -164,7 +180,7 @@ while running:
             elif event.key == pygame.K_p:  # Toggle pause with 'P'
                 paused = not paused
 
-    if not game_over and not paused:  # Game logic runs only when not paused
+    if not game_over and not paused:
         all_sprites.update()
 
         if not ball.update():
@@ -176,12 +192,19 @@ while running:
             ball.speed_y = -ball.speed_y
             score += len(brick_collision_list)
 
-        # Check for win condition
+        # Check for win condition or advance level
         if len(bricks) == 0:
-            game_over = True
-            display_message("You Win!", GREEN, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 20))
-            display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
-            display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
+            current_level += 1
+            if current_level <= 3:  # Replace with the total number of levels
+                generate_level(current_level)
+                ball.reset()
+                paddle.rect.x = (SCREEN_WIDTH - PADDLE_WIDTH) // 2
+                paddle.rect.y = SCREEN_HEIGHT - PADDLE_HEIGHT - 10
+            else:
+                game_over = True
+                display_message("You Win!", GREEN, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 20))
+                display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
+                display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
 
         # Increase ball speed based on score milestones
         if score // SCORE_MILESTONE > (score - len(brick_collision_list)) // SCORE_MILESTONE:
