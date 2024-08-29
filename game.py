@@ -41,24 +41,10 @@ paused = False  # Variable to track if the game is paused
 last_speed_increase_time = pygame.time.get_ticks()
 current_level = 1  # Start at level 1
 
-difficulty = "medium"
-
-# Modify game parameters based on difficulty
-if difficulty == "easy":
-    PADDLE_SPEED = 15
-    BALL_SPEED = 4
-    BRICK_ROWS = 4
-    BRICK_COLUMNS = 8
-elif difficulty == "medium":
-    PADDLE_SPEED = 10
-    BALL_SPEED = 5
-    BRICK_ROWS = 5
-    BRICK_COLUMNS = 10
-elif difficulty == "hard":
-    PADDLE_SPEED = 7
-    BALL_SPEED = 6
-    BRICK_ROWS = 6
-    BRICK_COLUMNS = 12
+# Menu variables
+menu_active = True
+selected_difficulty = 1
+difficulty_options = ["Easy", "Medium", "Hard"]
 
 def display_message(text, color, position):
     message = font.render(text, True, color)
@@ -87,7 +73,6 @@ def generate_level(level):
                 # More challenging pattern for level 3
                 if (row + col) % 2 == 0:
                     create_brick(row, col)
-            # Add more levels with different patterns if needed
 
 def restart_game(start_level=1):
     global game_over, score, lives, ball, paddle, current_level
@@ -111,6 +96,24 @@ def handle_ball_fall():
     else:
         return True
     return False
+
+def set_difficulty(difficulty):
+    global PADDLE_SPEED, BALL_SPEED, BRICK_ROWS, BRICK_COLUMNS
+    if difficulty == "easy":
+        PADDLE_SPEED = 15
+        BALL_SPEED = 4
+        BRICK_ROWS = 4
+        BRICK_COLUMNS = 8
+    elif difficulty == "medium":
+        PADDLE_SPEED = 10
+        BALL_SPEED = 5
+        BRICK_ROWS = 5
+        BRICK_COLUMNS = 10
+    elif difficulty == "hard":
+        PADDLE_SPEED = 7
+        BALL_SPEED = 6
+        BRICK_ROWS = 6
+        BRICK_COLUMNS = 12
 
 class Paddle(pygame.sprite.Sprite):
     def __init__(self):
@@ -183,77 +186,99 @@ paddle = Paddle()
 ball = Ball()
 all_sprites.add(paddle)
 all_sprites.add(ball)
-generate_level(current_level)
 
 # Main game loop
 running = True
 while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r and game_over:
-                restart_game()
-            elif event.key == pygame.K_p:  # Toggle pause with 'P'
-                paused = not paused
+    if menu_active:
+        screen.fill(BLACK)
 
-    if not game_over and not paused:
-        all_sprites.update()
+        # Display menu options
+        for i, option in enumerate(difficulty_options):
+            color = GREEN if i == selected_difficulty else WHITE
+            display_message(option, color, (SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT // 2 + i * 40))
 
-        if not ball.update():
-            if handle_ball_fall():
-                game_over = True
+        pygame.display.flip()
 
-        brick_collision_list = pygame.sprite.spritecollide(ball, bricks, True)
-        if brick_collision_list:
-            ball.speed_y = -ball.speed_y
-            score += len(brick_collision_list)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selected_difficulty = (selected_difficulty - 1) % len(difficulty_options)
+                elif event.key == pygame.K_DOWN:
+                    selected_difficulty = (selected_difficulty + 1) % len(difficulty_options)
+                elif event.key == pygame.K_RETURN:
+                    menu_active = False
+                    set_difficulty(difficulty_options[selected_difficulty].lower())
+                    generate_level(current_level)
+    else:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r and game_over:
+                    restart_game()
+                elif event.key == pygame.K_p:  # Toggle pause with 'P'
+                    paused = not paused
 
-        # Check for win condition or advance level
-        if len(bricks) == 0:
-            current_level += 1
-            if current_level <= 3:  # Replace with the total number of levels
-                generate_level(current_level)
-                ball.reset()
-                paddle.rect.x = (SCREEN_WIDTH - PADDLE_WIDTH) // 2
-                paddle.rect.y = SCREEN_HEIGHT - PADDLE_HEIGHT - 10
-            else:
-                game_over = True
-                display_message("You Win!", GREEN, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 20))
-                display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
-                display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
+        if not game_over and not paused:
+            all_sprites.update()
 
-        # Increase ball speed based on score milestones
-        if score // SCORE_MILESTONE > (score - len(brick_collision_list)) // SCORE_MILESTONE:
-            ball.speed_x += BALL_SPEED_INCREMENT * (1 if ball.speed_x > 0 else -1)
-            ball.speed_y += BALL_SPEED_INCREMENT
+            if not ball.update():
+                if handle_ball_fall():
+                    game_over = True
 
-        # Increase ball speed incrementally over time
-        current_time = pygame.time.get_ticks()
-        if current_time - last_speed_increase_time > 30000:  # Increase every 30 seconds
-            ball.speed_x += BALL_SPEED_INCREMENT * (1 if ball.speed_x > 0 else -1)
-            ball.speed_y += BALL_SPEED_INCREMENT
-            last_speed_increase_time = current_time
+            brick_collision_list = pygame.sprite.spritecollide(ball, bricks, True)
+            if brick_collision_list:
+                ball.speed_y = -ball.speed_y
+                score += len(brick_collision_list)
 
-    screen.fill(BLACK)
-    all_sprites.draw(screen)
+            # Check for win condition or advance level
+            if len(bricks) == 0:
+                current_level += 1
+                if current_level <= 3:  # Replace with the total number of levels
+                    generate_level(current_level)
+                    ball.reset()
+                    paddle.rect.x = (SCREEN_WIDTH - PADDLE_WIDTH) // 2
+                    paddle.rect.y = SCREEN_HEIGHT - PADDLE_HEIGHT - 10
+                else:
+                    game_over = True
+                    display_message("You Win!", GREEN, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 20))
+                    display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
+                    display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
 
-    score_text = font.render(f"Score: {score}", True, WHITE)
-    screen.blit(score_text, (10, 10))
+            # Increase ball speed based on score milestones
+            if score // SCORE_MILESTONE > (score - len(brick_collision_list)) // SCORE_MILESTONE:
+                ball.speed_x += BALL_SPEED_INCREMENT * (1 if ball.speed_x > 0 else -1)
+                ball.speed_y += BALL_SPEED_INCREMENT
 
-    lives_text = font.render(f"Lives: {lives}", True, WHITE)
-    screen.blit(lives_text, (10, 50))
+            # Increase ball speed incrementally over time
+            current_time = pygame.time.get_ticks()
+            if current_time - last_speed_increase_time > 30000:  # Increase every 30 seconds
+                ball.speed_x += BALL_SPEED_INCREMENT * (1 if ball.speed_x > 0 else -1)
+                ball.speed_y += BALL_SPEED_INCREMENT
+                last_speed_increase_time = current_time
 
-    if paused:
-        display_message("Paused", WHITE, (SCREEN_WIDTH // 2 - 60, SCREEN_HEIGHT // 2 - 20))  # Show pause message
+        screen.fill(BLACK)
+        all_sprites.draw(screen)
 
-    if game_over and len(bricks) > 0:
-        display_message("Game Over", RED, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 20))
-        display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
-        display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
 
-    pygame.display.flip()
-    pygame.time.Clock().tick(60)
+        lives_text = font.render(f"Lives: {lives}", True, WHITE)
+        screen.blit(lives_text, (10, 50))
+
+        if paused:
+            display_message("Paused", WHITE, (SCREEN_WIDTH // 2 - 60, SCREEN_HEIGHT // 2 - 20))  # Show pause message
+
+        if game_over and len(bricks) > 0:
+            display_message("Game Over", RED, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 20))
+            display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
+            display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
+
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
 
 pygame.quit()
 sys.exit()
