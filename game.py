@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import os
 
 pygame.init()
 
@@ -31,6 +32,11 @@ BRICK_COLUMNS = 10
 
 # Colors for bricks
 BRICK_COLORS = [RED, GREEN, BLUE, YELLOW, ORANGE]
+
+# High score management
+HIGH_SCORES_FILE = "high_scores.txt"
+MAX_HIGH_SCORES = 5  # Number of high scores to track
+last_scores = []  # List to track the last 5 scores
 
 # Game variables
 score = 0
@@ -115,6 +121,39 @@ def set_difficulty(difficulty):
         BRICK_ROWS = 6
         BRICK_COLUMNS = 12
 
+def load_high_scores():
+    if os.path.exists(HIGH_SCORES_FILE):
+        with open(HIGH_SCORES_FILE, "r") as file:
+            scores = [int(line.strip()) for line in file.readlines()]
+            return scores
+    return []
+
+def save_high_scores(scores):
+    with open(HIGH_SCORES_FILE, "w") as file:
+        for score in scores:
+            file.write(f"{score}\n")
+
+def update_high_scores(score):
+    global last_scores
+    last_scores.append(score)
+    last_scores = last_scores[-MAX_HIGH_SCORES:]  # Keep only the last 5 scores
+
+    high_scores = load_high_scores()
+    high_scores.append(score)
+    high_scores.sort(reverse=True)
+    high_scores = high_scores[:MAX_HIGH_SCORES]
+    save_high_scores(high_scores)
+
+def display_scores():
+    # Display the last 5 scores
+    for i, last_score in enumerate(reversed(last_scores)):
+        display_message(f"Last Score {i+1}: {last_score}", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 80 + i * 30))
+    
+    # Display the high score
+    high_scores = load_high_scores()
+    if high_scores:
+        display_message(f"High Score: {high_scores[0]}", YELLOW, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 80 + len(last_scores) * 30))
+
 class Paddle(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -187,6 +226,9 @@ ball = Ball()
 all_sprites.add(paddle)
 all_sprites.add(ball)
 
+# Load initial high scores
+load_high_scores()
+
 # Main game loop
 running = True
 while running:
@@ -228,6 +270,7 @@ while running:
             if not ball.update():
                 if handle_ball_fall():
                     game_over = True
+                    update_high_scores(score)  # Update high scores when the game is over
 
             brick_collision_list = pygame.sprite.spritecollide(ball, bricks, True)
             if brick_collision_list:
@@ -247,6 +290,7 @@ while running:
                     display_message("You Win!", GREEN, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 20))
                     display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
                     display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
+                    update_high_scores(score)  # Update high scores when the game is over
 
             # Increase ball speed based on score milestones
             if score // SCORE_MILESTONE > (score - len(brick_collision_list)) // SCORE_MILESTONE:
@@ -276,6 +320,7 @@ while running:
             display_message("Game Over", RED, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 20))
             display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
             display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
+            display_scores()  # Show last scores and high score
 
         pygame.display.flip()
         pygame.time.Clock().tick(60)
