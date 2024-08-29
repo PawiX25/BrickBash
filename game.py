@@ -13,6 +13,9 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+ORANGE = (255, 165, 0)
 
 PADDLE_WIDTH = 100
 PADDLE_HEIGHT = 10
@@ -28,6 +31,10 @@ BRICK_HEIGHT = 20
 BRICK_ROWS = 5
 BRICK_COLUMNS = 10
 
+# Colors for bricks
+BRICK_COLORS = [RED, GREEN, BLUE, YELLOW, ORANGE]
+
+# Game variables
 score = 0
 lives = 3
 font = pygame.font.SysFont(None, 36)
@@ -50,7 +57,8 @@ def restart_game():
     bricks.empty()
     for row in range(BRICK_ROWS):
         for col in range(BRICK_COLUMNS):
-            brick = Brick(col * (BRICK_WIDTH + 5) + 35, row * (BRICK_HEIGHT + 5) + 50)
+            color = BRICK_COLORS[row % len(BRICK_COLORS)]
+            brick = Brick(col * (BRICK_WIDTH + 5) + 35, row * (BRICK_HEIGHT + 5) + 50, color)
             all_sprites.add(brick)
             bricks.add(brick)
 
@@ -119,10 +127,10 @@ class Ball(pygame.sprite.Sprite):
         return True
 
 class Brick(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, color):
         super().__init__()
         self.image = pygame.Surface([BRICK_WIDTH, BRICK_HEIGHT])
-        self.image.fill(RED)
+        self.image.fill(color)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -138,7 +146,8 @@ all_sprites.add(paddle)
 all_sprites.add(ball)
 for row in range(BRICK_ROWS):
     for col in range(BRICK_COLUMNS):
-        brick = Brick(col * (BRICK_WIDTH + 5) + 35, row * (BRICK_HEIGHT + 5) + 50)
+        color = BRICK_COLORS[row % len(BRICK_COLORS)]
+        brick = Brick(col * (BRICK_WIDTH + 5) + 35, row * (BRICK_HEIGHT + 5) + 50, color)
         all_sprites.add(brick)
         bricks.add(brick)
 
