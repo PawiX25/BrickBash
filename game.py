@@ -173,6 +173,13 @@ while running:
             ball.speed_y = -ball.speed_y
             score += len(brick_collision_list)
 
+        # Check for win condition
+        if len(bricks) == 0:
+            game_over = True
+            display_message("You Win!", GREEN, (SCREEN_WIDTH // 2 - 80, SCREEN_HEIGHT // 2 - 20))
+            display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
+            display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
+
         # Increase ball speed based on score milestones
         if score // SCORE_MILESTONE > (score - len(brick_collision_list)) // SCORE_MILESTONE:
             ball.speed_x += BALL_SPEED_INCREMENT * (1 if ball.speed_x > 0 else -1)
@@ -194,7 +201,7 @@ while running:
     lives_text = font.render(f"Lives: {lives}", True, WHITE)
     screen.blit(lives_text, (10, 50))
 
-    if game_over:
+    if game_over and len(bricks) > 0:
         display_message("Game Over", RED, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 20))
         display_message(f"Final Score: {score}", WHITE, (SCREEN_WIDTH // 2 - 120, SCREEN_HEIGHT // 2 + 20))
         display_message("Press 'R' to Restart", WHITE, (SCREEN_WIDTH // 2 - 140, SCREEN_HEIGHT // 2 + 60))
