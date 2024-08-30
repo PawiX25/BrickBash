@@ -58,3 +58,9 @@ BrickBash is a classic "Breakout" style game developed using Python and the Pyga
 
 - High scores are automatically saved and loaded from `high_scores.txt`.
 - The top 5 scores are displayed at the game over screen.
+
+## Screenshots
+
+Here’s a glimpse of BrickBash in action:
+
+![BrickBash Screenshot](https://github.com/user-attachments/assets/a372607a-90c4-4535-be01-3820c028b00b)
